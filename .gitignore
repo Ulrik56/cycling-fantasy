@@ -1,0 +1,11 @@
+*.json
+!package.json
+!package-lock.json
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+build/
+*.log
+*.txt
+*.xlsx

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycling Fantasy - Point Opdatering</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .rider-list {
+            display: grid;
+            gap: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .rider-card {
+            display: grid;
+            grid-template-columns: 40px 1fr 150px 120px 150px;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .rider-card:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .rider-card.complete {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .rider-number {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+        
+        .rider-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .rider-points {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .rider-points input {
+            width: 100px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .rider-points input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        
+        .search-btn:hover {
+            background: #5568d3;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+        }
+        
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+        
+        .instructions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚴 Cycling Fantasy Point Opdatering</h1>
+        <p class="subtitle">Opdater UCI Season 2026 points for dine ryttere</p>
+        
+        <div class="instructions">
+            <h3>📋 Sådan gør du:</h3>
+            <ol>
+                <li>Klik på "Søg PCS" knappen ved hver rytter</li>
+                <li>Find rytterens UCI Season 2026 points på ProCyclingStats</li>
+                <li>Indtast point i feltet</li>
+                <li>Når alle er færdige, klik "Eksporter Til Fil"</li>
+                <li>Gem filen som rider_points.txt</li>
+                <li>Kør Python scriptet for at opdatere Google Sheet</li>
+            </ol>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalRiders">78</div>
+                <div class="stat-label">Total Ryttere</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedRiders">0</div>
+                <div class="stat-label">Opdateret</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="remainingRiders">78</div>
+                <div class="stat-label">Tilbage</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Søg efter rytter..." />
+        </div>
+        
+        <div class="rider-list" id="riderList"></div>
+        
+        <div class="actions">
+            <button class="btn-primary" onclick="exportToFile()">📥 Eksporter Til Fil</button>
+            <button class="btn-secondary" onclick="clearAll()">🔄 Nulstil Alle</button>
+        </div>
+    </div>
+
+    <script>
+        // Alle dine ryttere
+        const riders = [
+            "EVENEPOEL Remco", "PHILIPSEN Jasper", "ROGLIČ Primož", "GIRMAY Biniam", "HIRSCHI Marc",
+            "SEIXAS Paul", "MAS NICOLAU Enric", "O'CONNOR Ben", "UIJTDEBROEKS Cian", "KÜNG Stefan",
+            "PHILIPSEN Albert", "VAN GILS Maxim", "GAUDU David", "MOHORIC Matej", "RODRIGUEZ CANO Carlos",
+            "LAPORTE Christophe", "MARTINEZ POVEDA Daniel Felipe", "VLASOV Aleksandr", "ASGREEN Kasper",
+            "VALTER Attila", "VAUQUELIN Kévin", "BRENNAN Matthew", "TIBERI Antonio", "RICCITELLO Matthew",
+            "LAPEIRA Paul", "LECERF Junior", "WIDAR Jarno", "VAN EETVELT Lennert", "COSNEFROY Benoit",
+            "OMRZEL Jakob", "BISIAUX Léo", "AGOSTINACCHIO Mattia", "KRON Andreas Lorentz",
+            "VINGEGAARD HANSEN Jonas", "ONLEY Oscar", "LUND ANDRESEN Tobias", "KUBIŠ Lukáš",
+            "NIELSEN Magnus Cort", "DE BONDT Dries", "POOLE Max David", "NORDHAGEN Jørgen",
+            "LAMPERTI Luke", "TEUTENBERG Tim Torn", "MOLARD Rudy", "LEMMEN Bart", "HELLEMOSE Asbjørn",
+            "VAN AERT Wout", "MAGNIER Paul", "GANNA Filippo", "ARENSMAN Thymen", "SIMMONS Quinn",
+            "TOMAS MORGADO António", "NYS Thibau", "DEL GROSSO Tibor", "VACEK Mathias",
+            "SÖDERQVIST Jakob", "VAN BAARLE Dylan", "ZINGLE Axel", "DEL TORO ROMERO Isaac",
+            "PELLIZZARI Giulio", "DAINESE Alberto", "BLACKMORE Joseph", "PERICAS CAPDEVILA Adria",
+            "TORRES ARIAS Pablo", "KOOIJ Olav", "MERLIER Tim", "LANDA MEANA Mikel", "RONDEL Mathys",
+            "SEGAERT Alec", "FOLDAGER Anders", "BJERG Mikkel Norsgaard", "HANSEN Peter",
+            "DE LIE Arnaud", "BITTNER Pavel", "VAN WILDER Ilan", "GROENEWEGEN Dylan",
+            "KRAGH ANDERSEN Søren", "GAVIRIA RENDON Fernando"
+        ].sort();
+
+        let riderPoints = {};
+
+        // Load saved data
+        const savedData = localStorage.getItem('cyclingFantasyPoints');
+        if (savedData) {
+            riderPoints = JSON.parse(savedData);
+        }
+
+        function renderRiders() {
+            const container = document.getElementById('riderList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filteredRiders = riders.filter(r => r.toLowerCase().includes(searchTerm));
+            
+            container.innerHTML = filteredRiders.map((rider, index) => {
+                const points = riderPoints[rider] || '';
+                const isComplete = points !== '';
+                const searchUrl = `https://www.procyclingstats.com/search.php?term=${encodeURIComponent(rider)}&searchf=Search`;
+                
+                return `
+                    <div class="rider-card ${isComplete ? 'complete' : ''}">
+                        <div class="rider-number">${index + 1}</div>
+                        <div class="rider-name">${rider}</div>
+                        <div class="rider-points">
+                            <input 
+                                type="number" 
+                                value="${points}" 
+                                placeholder="Point"
+                                onchange="updatePoints('${rider}', this.value)"
+                            />
+                        </div>
+                        <button class="search-btn" onclick="window.open('${searchUrl}', '_blank')">
+                            🔍 Søg PCS
+                        </button>
+                        <button class="export-btn" onclick="copyPoints('${rider}')">
+                            📋 Kopier
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            updateStats();
+        }
+
+        function updatePoints(rider, points) {
+            if (points) {
+                riderPoints[rider] = parseInt(points);
+            } else {
+                delete riderPoints[rider];
+            }
+            localStorage.setItem('cyclingFantasyPoints', JSON.stringify(riderPoints));
+            renderRiders();
+        }
+
+        function updateStats() {
+            const completed = Object.keys(riderPoints).length;
+            const total = riders.length;
+            const remaining = total - completed;
+            const percentage = (completed / total * 100).toFixed(0);
+            
+            document.getElementById('totalRiders').textContent = total;
+            document.getElementById('completedRiders').textContent = completed;
+            document.getElementById('remainingRiders').textContent = remaining;
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        function exportToFile() {
+            const lines = riders.map(rider => {
+                const points = riderPoints[rider] || 0;
+                return `${rider}: ${points}`;
+            });
+            
+            const content = lines.join('\n');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rider_points.txt';
+            a.click();
+            
+            alert('✅ Fil downloadet! Kør nu Python scriptet for at opdatere Google Sheet.');
+        }
+
+        function clearAll() {
+            if (confirm('Er du sikker på at du vil nulstille alle point?')) {
+                riderPoints = {};
+                localStorage.removeItem('cyclingFantasyPoints');
+                renderRiders();
+            }
+        }
+
+        function copyPoints(rider) {
+            const points = riderPoints[rider];
+            if (points) {
+                navigator.clipboard.writeText(points);
+                alert(`✅ ${points} point kopieret for ${rider}`);
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', renderRiders);
+
+        // Initial render
+        renderRiders();
+    </script>
+</body>
+</html>

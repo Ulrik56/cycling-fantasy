@@ -1,6 +1,8 @@
 """
-FULDT AUTOMATISK UCI POINT OPDATERING
-Bruger cloudscraper til at hente UCI ranking og opdatere Google Sheets
+FULDT AUTOMATISK UCI POINT OPDATERING - KOMPLET VERSION
+- Bruger CloudScraper til at omgå Cloudflare
+- Henter dagens UCI Season ranking
+- Batch updates til Google Sheets (ingen rate limit problemer)
 """
 
 import cloudscraper
@@ -30,7 +32,6 @@ def scrape_uci_ranking():
     print("🚴 Henter UCI Season Ranking med CloudScraper")
     print("=" * 70)
     
-    # Brug cloudscraper til at omgå Cloudflare
     scraper = cloudscraper.create_scraper(
         browser={
             'browser': 'chrome',
@@ -52,9 +53,12 @@ def scrape_uci_ranking():
     print(f"🔄 Starter scraping...")
     print("-" * 70)
     
+    # Brug dagens dato for at få aktuelle season points
+    today = datetime.now().strftime('%Y-%m-%d')
+    print(f"📅 Henter data for dato: {today}")
+    print("-" * 70)
+    
     while page_num <= MAX_PAGES:
-        # Brug dagens dato for at få aktuelle season points
-        today = datetime.now().strftime('%Y-%m-%d')
         url = f"https://www.procyclingstats.com/rankings.php?p=uci-season-individual&s=&date={today}&nation=&age=&page=smallerorequal&team=&offset={offset}&teamlevel=&filter=Filter"
         
         print(f"📥 Side {page_num}: ", end="", flush=True)
@@ -89,7 +93,6 @@ def scrape_uci_ranking():
             print(f"{len(data_rows)} ryttere ✅")
             
             if not data_rows or len(data_rows) < 5:
-                print("   Sidste side nået")
                 if data_rows:
                     all_data.extend(data_rows)
                 break
@@ -97,7 +100,6 @@ def scrape_uci_ranking():
             all_data.extend(data_rows)
             
             if len(data_rows) < 50:
-                print("   Sidste side nået")
                 break
             
             offset += 100
@@ -113,10 +115,8 @@ def scrape_uci_ranking():
         print("❌ Ingen data hentet")
         return None
     
-    # Konverter til DataFrame
     df = pd.DataFrame(all_data)
     
-    # Find header
     if len(df) > 0:
         first_row_str = ' '.join(df.iloc[0].astype(str))
         if any(kw in first_row_str for kw in ['#', 'Rider', 'Points']):
@@ -135,7 +135,6 @@ def convert_to_points_dict(df):
     
     points_dict = {}
     
-    # Find rider og points kolonner
     rider_col = None
     points_col = None
     
@@ -146,7 +145,6 @@ def convert_to_points_dict(df):
         if 'point' in col_lower and points_col is None:
             points_col = col
     
-    # Fallback til kolonne indeks hvis kolonnenavne ikke findes
     if rider_col is None:
         rider_col = 3 if len(df.columns) > 3 else 0
     if points_col is None:
@@ -160,7 +158,6 @@ def convert_to_points_dict(df):
             rider_name = str(row[rider_col]).strip()
             points_str = str(row[points_col]).strip()
             
-            # Parse points (fjern komma og decimal)
             if '.' in points_str:
                 points = int(float(points_str.replace(',', '')))
             else:
@@ -200,17 +197,15 @@ def normalize_name(name):
 
 def find_rider_points(rider_name, points_dict):
     """Find point for rytter med fuzzy matching"""
-    # Exact match
     if rider_name in points_dict:
         return points_dict[rider_name]
     
-    # Case-insensitive
     normalized = normalize_name(rider_name)
     for rank_name, points in points_dict.items():
         if normalize_name(rank_name) == normalized:
             return points
     
-    # Efternavn match
+    # Prøv at matche på forskellige navneformater
     parts = normalized.split()
     if len(parts) >= 2:
         last_name = parts[-1]
@@ -222,50 +217,61 @@ def find_rider_points(rider_name, points_dict):
                 # Match både fornavn og efternavn
                 if rank_parts[0] == first_name and rank_parts[-1] == last_name:
                     return points
-                # Kun efternavn hvis unikt
-                if rank_parts[-1] == last_name:
-                    # Check det ikke er et almindeligt efternavn
+                # Prøv omvendt rækkefølge (efternavn først)
+                if rank_parts[0] == last_name and rank_parts[-1] == first_name:
                     return points
     
     return None
 
-def update_google_sheet(sheet, points_dict):
-    """Opdater Google Sheet med UCI points"""
-    print("🔄 Opdaterer Google Sheet...")
+def update_google_sheet_batch(sheet, points_dict):
+    """Opdater Google Sheet med BATCH update (undgår rate limits)"""
+    print("🔄 Opdaterer Google Sheet (batch mode)...")
     print("=" * 70)
     
     all_values = sheet.get_all_values()
-    updated = 0
-    not_found = []
     today = datetime.now().strftime('%Y-%m-%d')
     
-    total = len(all_values) - 1
+    updates = []
+    updated = 0
+    not_found = []
     
     for i, row in enumerate(all_values[1:], start=2):
         if not row or not row[0]:
             continue
         
         rider_name = row[0].strip()
-        print(f"[{i-1}/{total}] {rider_name:40s} ", end="", flush=True)
+        print(f"[{i-1}/{len(all_values)-1}] {rider_name:40s} ", end="", flush=True)
         
         points = find_rider_points(rider_name, points_dict)
         
         if points is not None:
-            sheet.update_cell(i, 2, points)
-            sheet.update_cell(i, 3, today)
             print(f"→ {points:4d} point ✅")
+            updates.append({
+                'range': f'B{i}:C{i}',
+                'values': [[points, today]]
+            })
             updated += 1
         else:
-            sheet.update_cell(i, 2, 0)
-            sheet.update_cell(i, 3, today)
             print(f"→ 0 point (ikke i ranking)")
+            updates.append({
+                'range': f'B{i}:C{i}',
+                'values': [[0, today]]
+            })
             not_found.append(rider_name)
             updated += 1
-        
-        time.sleep(0.5)
     
     print("=" * 70)
-    print(f"✅ Opdateret: {updated}/{total} ryttere\n")
+    print(f"📝 Forbereder batch update af {len(updates)} ryttere...")
+    
+    if updates:
+        try:
+            sheet.batch_update(updates)
+            print(f"✅ Batch update succesfuld!\n")
+        except Exception as e:
+            print(f"❌ Batch update fejl: {e}\n")
+            return 0
+    
+    print(f"✅ Opdateret: {updated}/{len(all_values)-1} ryttere\n")
     
     if not_found:
         print(f"💡 {len(not_found)} ryttere ikke fundet (sat til 0):")
@@ -310,8 +316,8 @@ def main():
         print("❌ Kunne ikke forbinde til Google Sheets. Afslutter.")
         return
     
-    # 4. Opdater Google Sheet
-    updated = update_google_sheet(sheet, points_dict)
+    # 4. Opdater Google Sheet (BATCH!)
+    updated = update_google_sheet_batch(sheet, points_dict)
     
     # 5. Status
     print("=" * 70)

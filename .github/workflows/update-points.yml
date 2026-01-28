@@ -30,6 +30,7 @@ jobs:
     - name: Run update script
       run: |
         python update_automatic_cloudscraper.py
+        python scrape_upcoming_races.py
       
     - name: Show results
       if: always()

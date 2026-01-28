@@ -302,9 +302,9 @@ def save_to_google_sheets(races):
         for race in sorted(races, key=lambda x: x['date']):
             date_str = race['date'].strftime('%d.%m')
             
-            # Lav liste af danske ryttere
+            # Lav liste af danske ryttere - BRUG SEMIKOLON I STEDET FOR KOMMA
             if race['danish_riders']:
-                riders_str = ', '.join(race['danish_riders'])
+                riders_str = '; '.join(race['danish_riders'])
             else:
                 riders_str = f"{race['danish_count']} danskere" if race['danish_count'] > 0 else "Ingen danske"
             

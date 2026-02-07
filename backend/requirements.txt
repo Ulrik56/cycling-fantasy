@@ -1,0 +1,5 @@
+git+https://github.com/baronet2/FirstCyclingAPI.git#egg=firstcyclingapi
+fastapi==0.95.2
+uvicorn[standard]==0.22.0
+pandas==2.2.2
+httpx==0.24.1

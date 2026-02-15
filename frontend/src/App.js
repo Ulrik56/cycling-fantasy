@@ -1,7 +1,6 @@
 import { Trophy, Users, TrendingUp, RefreshCw, Calendar, Award, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 
 // GOOGLE SHEETS CONFIGURATION
-const GOOGLE_SHEET_ID = '1RfoTiYhMI-Yr7123evM4_PeSYn87W20UCBerhqV_Ztg'; // ERSTAT MED DIT SHEET ID
 const GOOGLE_SHEET_ID = '1RfoTiYhMI-Yr7123evM4_PeSYn87W20UCBerhqV_Ztg';
 
 // Hold data

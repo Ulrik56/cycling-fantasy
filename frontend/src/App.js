@@ -93,8 +93,34 @@ function CyclingFantasyManager() {
       localStorage.setItem('cycling-points', JSON.stringify(points));
       localStorage.setItem('cycling-last-update', new Date().toISOString());
       
-    } catch (err) {
-      setError(`Kunne ikke hente data: ${err.message}`);
+} catch (err) {
+  console.error('Google Sheets fejl:', err.message);
+  
+  // Prøv localStorage først
+  const cached = localStorage.getItem('cycling-points');
+  if (cached) {
+    setRiderPoints(JSON.parse(cached));
+    const cachedUpdate = localStorage.getItem('cycling-last-update');
+    if (cachedUpdate) {
+      setLastUpdate(new Date(cachedUpdate).toLocaleString('da-DK') + ' (cached)');
+    }
+    console.log('✅ Bruger cached data');
+  } else {
+    // Hvis ingen cache, brug minimum fallback
+    console.warn('⚠️ Ingen cached data - bruger fallback');
+    const fallbackPoints = {
+      "EVENEPOEL Remco": 3970,
+      "PHILIPSEN Jasper": 2095,
+      "VINGEGAARD Jonas": 3490,
+      "ROGLIČ Primož": 2520,
+      "GIRMAY Biniam": 1850,
+      "VAN AERT Wout": 2680,
+      "HIRSCHI Marc": 1380
+    };
+    setRiderPoints(fallbackPoints);
+    setLastUpdate('Fallback data');
+  }
+  setError(null);
       const cached = localStorage.getItem('cycling-points');
       if (cached) {
         setRiderPoints(JSON.parse(cached));

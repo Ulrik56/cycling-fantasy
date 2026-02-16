@@ -1,8 +1,0 @@
-fastapi==0.95.2
-uvicorn[standard]==0.21.1
-requests==2.31.0
-beautifulsoup4==4.12.2
-lxml==4.9.3
-# Installer firstcycling-mcp direkte fra GitHub (repo med package FirstCyclingAPI)
-# Dette trækker hele projektet som en dependency
-git+https://github.com/r-huijts/firstcycling-mcp.git@main

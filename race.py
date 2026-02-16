@@ -16,8 +16,13 @@ Examples
 >>> race.startlist()
 """
 
-from .api import cf
-from .parser import parse_race_result
+try:
+    from .api import cf
+    from .parser import parse_race_result
+except ImportError:
+    from api import cf
+    from parser import parse_race_result
+
 import pandas as pd
 from typing import Dict, Any, Optional
 

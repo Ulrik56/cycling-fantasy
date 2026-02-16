@@ -20,8 +20,13 @@ Examples
 >>> sprint = Ranking.sprint('women-elite')
 """
 
-from .api import cf
-from .parser import parse_ranking
+try:
+    from .api import cf
+    from .parser import parse_ranking
+except ImportError:
+    from api import cf
+    from parser import parse_ranking
+
 import pandas as pd
 from typing import Optional
 

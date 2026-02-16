@@ -22,10 +22,17 @@ Examples
 
 import pandas as pd
 from typing import List, Dict, Any, Optional
-from .api import cf
-from .parser import parse_ranking, parse_rider_profile, parse_rider_results
-from .rider import Rider
-from .ranking import Ranking
+
+try:
+    from .api import cf
+    from .parser import parse_ranking, parse_rider_profile, parse_rider_results
+    from .rider import Rider
+    from .ranking import Ranking
+except ImportError:
+    from api import cf
+    from parser import parse_ranking, parse_rider_profile, parse_rider_results
+    from rider import Rider
+    from ranking import Ranking
 
 
 class FantasyManager:

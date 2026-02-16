@@ -11,8 +11,13 @@ Examples
 ['Tadej Pogačar', 'Adam Yates', ...]
 """
 
-from .api import cf
-from .parser import parse_team
+try:
+    from .api import cf
+    from .parser import parse_team
+except ImportError:
+    from api import cf
+    from parser import parse_team
+
 import pandas as pd
 from typing import Dict, Any, List
 

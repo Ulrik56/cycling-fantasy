@@ -17,8 +17,13 @@ Examples
 ...
 """
 
-from .api import cf
-from .parser import parse_rider_profile, parse_rider_results, extract_rider_slug
+try:
+    from .api import cf
+    from .parser import parse_rider_profile, parse_rider_results, extract_rider_slug
+except ImportError:
+    from api import cf
+    from parser import parse_rider_profile, parse_rider_results, extract_rider_slug
+
 import pandas as pd
 from typing import Dict, Any, Optional
 

@@ -26,18 +26,38 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime, date
 import re
+import sys
+import os
 
-from api import cf
-from parser import (
-    parse_rider_profile, 
-    parse_rider_results, 
-    parse_race_result,
-    parse_latest_results,
-    extract_rider_slug
-)
-from rider import Rider
-from race import Race
-from ranking import Ranking
+# Tilføj current directory til path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    # Prøv relative imports først (når kørt som modul)
+    from .api import cf
+    from .parser import (
+        parse_rider_profile, 
+        parse_rider_results, 
+        parse_race_result,
+        parse_latest_results,
+        extract_rider_slug
+    )
+    from .rider import Rider
+    from .race import Race
+    from .ranking import Ranking
+except ImportError:
+    # Fallback til direkte imports (når kørt som script)
+    from api import cf
+    from parser import (
+        parse_rider_profile, 
+        parse_rider_results, 
+        parse_race_result,
+        parse_latest_results,
+        extract_rider_slug
+    )
+    from rider import Rider
+    from race import Race
+    from ranking import Ranking
 
 app = Flask(__name__)
 CORS(app)  # Tillad requests fra React app
@@ -487,4 +507,10 @@ if __name__ == '__main__':
     print("   GET /api/results/latest       - Latest results")
     print("   GET /api/health               - Health check")
     print("")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
+else:
+    # Når kørt via gunicorn, log startup
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logging.info("🚴 CyclingFlash API Server starting via WSGI...")

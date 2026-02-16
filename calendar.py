@@ -15,8 +15,13 @@ Examples
 >>> results = LatestResults.get()
 """
 
-from .api import cf
-from .parser import parse_calendar, parse_latest_results, parse_transfers
+try:
+    from .api import cf
+    from .parser import parse_calendar, parse_latest_results, parse_transfers
+except ImportError:
+    from api import cf
+    from parser import parse_calendar, parse_latest_results, parse_transfers
+
 import pandas as pd
 from typing import List, Dict, Any
 

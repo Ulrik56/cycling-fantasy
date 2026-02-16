@@ -57,7 +57,8 @@ const getRiderPhotoUrl = (riderName) => {
   // "VAUQUELIN Kévin" -> "VAUQUELIN Kevin.webp"
   // "KÜNG Stefan" -> "KUNG Stefan.webp"
   const normalized = normalizeForFile(riderName);
-  return `/images/riders/${normalized}.webp`;
+  // Add version to bust cache
+  return `/images/riders/${normalized}.webp?v=2`;
 };
 
 function CyclingFantasyManager() {

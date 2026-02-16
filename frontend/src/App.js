@@ -43,11 +43,21 @@ const TEAMS = {
   "Team Anders M": ["VAN AERT Wout", "GALL Felix", "KOOIJ Olav", "BRENNAN Matthew", "CHRISTEN Jan", "HIRSCHI Marc", "SEIXAS Paul", "PLAPP Luke", "ABRAHAMSEN Jonas", "CORT Magnus", "GROSSO Tibor", "PHILIPSEN Albert", "VACEK Mathias", "FISHER-BLACK Finn", "LEKNESSUND Andreas", "NORDHAGEN Jørgen", "GEOGHEGAN HART Tao", "KRAGH ANDERSEN Søren", "VALGREN Michael", "VAN BAARLE Dylan"]
 };
 
+// Funktion til at normalisere navn (fjern accenter) for fil-lookup
+const normalizeForFile = (name) => {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Fjern accenter
+    .replace(/['']/g, ''); // Fjern apostroffer
+};
+
 // Funktion til at konvertere rytter navn til foto URL
 const getRiderPhotoUrl = (riderName) => {
-  // Nu matcher filnavnene direkte med Google Sheets navnene!
-  // "EVENEPOEL Remco" -> "EVENEPOEL Remco.webp"
-  return `/images/riders/${riderName}.webp`;
+  // Normaliser navnet for fil-lookup (fjern accenter)
+  // "VAUQUELIN Kévin" -> "VAUQUELIN Kevin.webp"
+  // "KÜNG Stefan" -> "KUNG Stefan.webp"
+  const normalized = normalizeForFile(riderName);
+  return `/images/riders/${normalized}.webp`;
 };
 
 function CyclingFantasyManager() {

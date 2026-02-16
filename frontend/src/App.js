@@ -72,11 +72,45 @@ const normalizeRiderName = (name) => {
 
 // Funktion til at konvertere rytter navn til foto URL (lokal fil)
 const getRiderPhotoUrl = (riderName) => {
-  // "EVENEPOEL Remco" -> "remco-evenepoel.webp"
-  // "O'CONNOR Ben" -> "ben-oconnor.webp"
-  // "RODRÍGUEZ Carlos" -> "carlos-rodriguez.webp"
+  // Manual mapping for special cases
+  const manualMap = {
+    "VLASOV Aleksandr": "aleksander-vlasov.webp",
+    "MORGADO António": "antonio-morgado.webp",
+    "TOMAS MORGADO António": "antonio-morgado.webp",
+    "COSNEFROY Benoit": "benoit-cosnefroy.webp",
+    "GIRMAY Biniam": "biniam-girmay-hailu.webp",
+    "HANSEN Peter": "peter-oxenberg-hansen.webp",
+    "Fernando Gaviria": "fernando-gaviria-rendon.webp",
+    "GAVIRIA RENDON Fernando": "fernando-gaviria-rendon.webp",
+    "PERICAS Adrià": "adria-pericas-capdevila.webp",
+    "PERICAS CAPDEVILA Adria": "adria-pericas-capdevila.webp",
+    "TORRES Pablo": "pablo-torres-arias.webp",
+    "TORRES ARIAS Pablo": "pablo-torres-arias.webp",
+    "DEL TORO Isaac": "isaac-del-toro-romero.webp",
+    "DEL TORO ROMERO Isaac": "isaac-del-toro-romero.webp",
+    "GROSSO Tibor": "tibor-del-grosso.webp",
+    "DEL GROSSO Tibor": "tibor-del-grosso.webp",
+    "VALGREN Michael": "michael-valgren-andersen.webp",
+    "FISHER-BLACK Finn": "finn-fisher-black.webp",
+    "FISHER-BLACK Finn Lachlan Fox": "finn-fisher-black.webp",
+    "POOLE Max David": "max-poole.webp",
+    "BJERG Mikkel": "mikkel-bjerg.webp",
+    "BJERG Mikkel Norsgaard": "mikkel-bjerg.webp",
+    "SÖDERQVIST Jakob": "jakob-soderqvist.webp",
+    "NIELSEN Magnus Cort": "magnus-cort-nielsen.webp",
+    "CORT Magnus": "magnus-cort-nielsen.webp",
+    "PLAPP Luke": "luke-plapp.webp",
+    "RICCITELLO Matthew": "matthew-riccitello.webp"
+  };
+  
+  // Check manual mapping first
+  if (manualMap[riderName]) {
+    return `/images/riders/${manualMap[riderName]}`;
+  }
+  
+  // Standard conversion
   const normalized = normalizeRiderName(riderName);
-  const parts = normalized.split(' ').filter(p => p); // Remove empty parts
+  const parts = normalized.split(' ').filter(p => p);
   const lastname = parts[0];
   const firstname = parts.slice(1).join('-');
   const filename = `${firstname}-${lastname}.webp`;

@@ -60,12 +60,25 @@ const TEAMS = {
   "Team Anders M": ["VAN AERT Wout", "GALL Felix", "KOOIJ Olav", "BRENNAN Matthew", "CHRISTEN Jan", "HIRSCHI Marc", "SEIXAS Paul", "PLAPP Lucas", "ABRAHAMSEN Jonas", "CORT Magnus", "GROSSO Tibor", "PHILIPSEN Albert", "VACEK Mathias", "FISHER-BLACK Finn", "LEKNESSUND Andreas", "NORDHAGEN Jørgen", "GEOGHEGAN HART Tao", "KRAGH ANDERSEN Søren", "VALGREN Michael", "VAN BAARLE Dylan"]
 };
 
+// Funktion til at normalisere rytter navne (fjern accenter og specialtegn)
+const normalizeRiderName = (name) => {
+  return name
+    .normalize('NFD') // Decompose characters with accents
+    .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
+    .replace(/['']/g, '') // Remove apostrophes
+    .replace(/[^a-zA-Z\s-]/g, '') // Remove other special chars except spaces and hyphens
+    .toLowerCase();
+};
+
 // Funktion til at konvertere rytter navn til foto URL (lokal fil)
 const getRiderPhotoUrl = (riderName) => {
   // "EVENEPOEL Remco" -> "remco-evenepoel.webp"
-  const parts = riderName.split(' ');
-  const lastname = parts[0].toLowerCase();
-  const firstname = parts.slice(1).join('-').toLowerCase();
+  // "O'CONNOR Ben" -> "ben-oconnor.webp"
+  // "RODRÍGUEZ Carlos" -> "carlos-rodriguez.webp"
+  const normalized = normalizeRiderName(riderName);
+  const parts = normalized.split(' ').filter(p => p); // Remove empty parts
+  const lastname = parts[0];
+  const firstname = parts.slice(1).join('-');
   const filename = `${firstname}-${lastname}.webp`;
   return `/images/riders/${filename}`;
 };

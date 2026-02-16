@@ -62,8 +62,11 @@ const TEAMS = {
 
 // Funktion til at konvertere rytter navn til foto URL (lokal fil)
 const getRiderPhotoUrl = (riderName) => {
-  // "EVENEPOEL Remco" -> "evenepoel_remco.jpeg"
-  const filename = riderName.replace(' ', '_').toLowerCase() + '.jpeg';
+  // "EVENEPOEL Remco" -> "remco-evenepoel.webp"
+  const parts = riderName.split(' ');
+  const lastname = parts[0].toLowerCase();
+  const firstname = parts.slice(1).join('-').toLowerCase();
+  const filename = `${firstname}-${lastname}.webp`;
   return `/images/riders/${filename}`;
 };
 

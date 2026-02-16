@@ -1,0 +1,13 @@
+# Render Blueprint
+# Deploy: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: cyclingflash-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 server:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

@@ -4,26 +4,9 @@ import { Trophy, Users, TrendingUp, RefreshCw, Calendar, Award, ChevronDown, Che
 // GOOGLE SHEETS CONFIGURATION
 const GOOGLE_SHEET_ID = '1RfoTiYhMI-Yr7123evM4_PeSYn87W20UCBerhqV_Ztg';
 
-// Navn mapping - Google Sheets har nogle navne i forkert format
-const NAME_MAPPING = {
-  'COSNEFROY Benoit': 'Benoît Cosnefroy',
-  'LUND ANDRESEN Tobias': 'ANDRESEN Tobias Lund'
-};
-
 // Helper funktion til at få points for en rytter
 const getRiderPoints = (riderName, pointsData) => {
-  // Prøv direkte match først
-  if (pointsData[riderName]) {
-    return pointsData[riderName];
-  }
-  
-  // Prøv mapping
-  const mappedName = NAME_MAPPING[riderName];
-  if (mappedName && pointsData[mappedName]) {
-    return pointsData[mappedName];
-  }
-  
-  return 0;
+  return pointsData[riderName] || 0;
 };
 
 // DANSKE CYKELCITATER - Legendariske kommentarer
@@ -50,71 +33,21 @@ const DANISH_CYCLING_QUOTES = [
 
 // Hold data - Team Vester er 2025 mester! 🏆
 const TEAMS = {
-  "Team Døssing": ["EVENEPOEL Remco", "PHILIPSEN Jasper", "ROGLIČ Primož", "GIRMAY Biniam", "HIRSCHI Marc", "SEIXAS Paul", "MAS Enric", "O'CONNOR Ben", "UIJTDEBROEKS Cian", "KÜNG Stefan", "PHILIPSEN Albert", "VAN GILS Maxim", "GAUDU David", "MOHORIC Matej", "RODRIGUEZ Carlos", "LAPORTE Christophe", "MARTINEZ Daniel", "VLASOV Aleksandr", "ASGREEN Kasper", "VALTER Attila"],
-  "Team Vester": ["EVENEPOEL Remco", "VAUQUELIN Kévin", "PHILIPSEN Jasper", "BRENNAN Matthew", "HIRSCHI Marc", "SEIXAS Paul", "TIBERI Antonio", "RICCITELLO Matthew", "LAPEIRA Paul", "LECERF Junior", "WIDAR Jarno", "GAUDU David", "VAN EETVELT Lennert", "RODRIGUEZ Carlos", "COSNEFROY Benoit", "LAPORTE Christophe", "OMRZEL Jakob", "BISIAUX Léo", "AGOSTINACCHIO Mattia", "KRON Andreas"],
-  "Team Peter": ["VINGEGAARD Jonas", "ONLEY Oscar", "BRENNAN Matthew", "LUND ANDRESEN Tobias", "KUBIŠ Lukáš", "SEIXAS Paul", "UIJTDEBROEKS Cian", "CORT Magnus", "LECERF Junior", "WIDAR Jarno", "DE BONDT Dries", "VAN EETVELT Lennert", "POOLE Max David", "NORDHAGEN Jørgen", "LAMPERTI Luke", "TEUTENBERG Tim Torn", "ASGREEN Kasper", "MOLARD Rudy", "LEMMEN Bart", "HELLEMOSE Asbjørn"],
+  "Team Døssing": ["EVENEPOEL Remco", "PHILIPSEN Jasper", "ROGLIČ Primož", "GIRMAY Biniam", "HIRSCHI Marc", "SEIXAS Paul", "MAS Enric", "O'CONNOR Ben", "UIJTDEBROEKS Cian", "KÜNG Stefan", "PHILIPSEN Albert", "VAN GILS Maxim", "GAUDU David", "MOHORIČ Matej", "RODRÍGUEZ Carlos", "LAPORTE Christophe", "MARTÍNEZ Daniel Felipe", "VLASOV Aleksandr", "ASGREEN Kasper", "VALTER Attila"],
+  "Team Vester": ["EVENEPOEL Remco", "VAUQUELIN Kévin", "PHILIPSEN Jasper", "BRENNAN Matthew", "HIRSCHI Marc", "SEIXAS Paul", "TIBERI Antonio", "RICCITELLO Matthew", "LAPEIRA Paul", "LECERF Junior", "WIDAR Jarno", "GAUDU David", "VAN EETVELT Lennert", "RODRÍGUEZ Carlos", "Benoît Cosnefroy", "LAPORTE Christophe", "OMRZEL Jakob", "BISIAUX Léo", "AGOSTINACCHIO Mattia", "KRON Andreas"],
+  "Team Peter": ["VINGEGAARD Jonas", "ONLEY Oscar", "BRENNAN Matthew", "ANDRESEN Tobias Lund", "KUBIŠ Lukáš", "SEIXAS Paul", "UIJTDEBROEKS Cian", "CORT Magnus", "LECERF Junior", "WIDAR Jarno", "DE BONDT Dries", "VAN EETVELT Lennert", "POOLE Max David", "NORDHAGEN Jørgen", "LAMPERTI Luke", "TEUTENBERG Tim Torn", "ASGREEN Kasper", "MOLARD Rudy", "LEMMEN Bart", "HELLEMOSE Asbjørn"],
   "Kasper Krabber": ["VAN AERT Wout", "MAGNIER Paul", "GANNA Filippo", "ARENSMAN Thymen", "BRENNAN Matthew", "SIMMONS Quinn", "SEIXAS Paul", "MORGADO António", "NYS Thibau", "UIJTDEBROEKS Cian", "GROSSO Tibor", "VACEK Mathias", "VAN GILS Maxim", "WIDAR Jarno", "SÖDERQVIST Jakob", "VAN EETVELT Lennert", "POOLE Max David", "OMRZEL Jakob", "VAN BAARLE Dylan", "ZINGLE Axel"],
   "T-Dawgs Dogs": ["DEL TORO Isaac", "MAGNIER Paul", "BRENNAN Matthew", "PELLIZZARI Giulio", "SEIXAS Paul", "RICCITELLO Matthew", "MORGADO António", "NYS Thibau", "GROSSO Tibor", "PHILIPSEN Albert", "VACEK Mathias", "DAINESE Alberto", "WIDAR Jarno", "LAMPERTI Luke", "BLACKMORE Joseph", "OMRZEL Jakob", "VLASOV Aleksandr", "PERICAS Adrià", "TORRES Pablo", "AGOSTINACCHIO Mattia"],
   "Gewiss Allan": ["VINGEGAARD Jonas", "MAGNIER Paul", "KOOIJ Olav", "MERLIER Tim", "BRENNAN Matthew", "SEIXAS Paul", "RICCITELLO Matthew", "LANDA Mikel", "RONDEL Mathys", "POOLE Max David", "SEGAERT Alec", "LAMPERTI Luke", "BLACKMORE Joseph", "TEUTENBERG Tim Torn", "FOLDAGER Anders", "VAN BAARLE Dylan", "ZINGLE Axel", "BJERG Mikkel", "HANSEN Peter", "KRON Andreas"],
-  "Don Karnage": ["EVENEPOEL Remco", "DE LIE Arnaud", "MAGNIER Paul", "GIRMAY Biniam", "SEIXAS Paul", "BITTNER Pavel", "VAN WILDER Ilan", "O'CONNOR Ben", "GROSSO Tibor", "PHILIPSEN Albert", "GROENEWEGEN Dylan", "MOHORIC Matej", "VAN EETVELT Lennert", "POOLE Max David", "LAMPERTI Luke", "LAPORTE Christophe", "KRAGH ANDERSEN Søren", "ZINGLE Axel", "Fernando Gaviria", "KRON Andreas"],
-  "Team Anders M": ["VAN AERT Wout", "GALL Felix", "KOOIJ Olav", "BRENNAN Matthew", "CHRISTEN Jan", "HIRSCHI Marc", "SEIXAS Paul", "PLAPP Lucas", "ABRAHAMSEN Jonas", "CORT Magnus", "GROSSO Tibor", "PHILIPSEN Albert", "VACEK Mathias", "FISHER-BLACK Finn", "LEKNESSUND Andreas", "NORDHAGEN Jørgen", "GEOGHEGAN HART Tao", "KRAGH ANDERSEN Søren", "VALGREN Michael", "VAN BAARLE Dylan"]
+  "Don Karnage": ["EVENEPOEL Remco", "DE LIE Arnaud", "MAGNIER Paul", "GIRMAY Biniam", "SEIXAS Paul", "BITTNER Pavel", "VAN WILDER Ilan", "O'CONNOR Ben", "GROSSO Tibor", "PHILIPSEN Albert", "GROENEWEGEN Dylan", "MOHORIČ Matej", "VAN EETVELT Lennert", "POOLE Max David", "LAMPERTI Luke", "LAPORTE Christophe", "KRAGH ANDERSEN Søren", "ZINGLE Axel", "Fernando Gaviria", "KRON Andreas"],
+  "Team Anders M": ["VAN AERT Wout", "GALL Felix", "KOOIJ Olav", "BRENNAN Matthew", "CHRISTEN Jan", "HIRSCHI Marc", "SEIXAS Paul", "PLAPP Luke", "ABRAHAMSEN Jonas", "CORT Magnus", "GROSSO Tibor", "PHILIPSEN Albert", "VACEK Mathias", "FISHER-BLACK Finn", "LEKNESSUND Andreas", "NORDHAGEN Jørgen", "GEOGHEGAN HART Tao", "KRAGH ANDERSEN Søren", "VALGREN Michael", "VAN BAARLE Dylan"]
 };
 
-// Funktion til at normalisere rytter navne (fjern accenter og specialtegn)
-const normalizeRiderName = (name) => {
-  return name
-    .normalize('NFD') // Decompose characters with accents
-    .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
-    .replace(/['']/g, '') // Remove apostrophes
-    .replace(/[^a-zA-Z\s-]/g, '') // Remove other special chars except spaces and hyphens
-    .toLowerCase();
-};
-
-// Funktion til at konvertere rytter navn til foto URL (lokal fil)
+// Funktion til at konvertere rytter navn til foto URL
 const getRiderPhotoUrl = (riderName) => {
-  // Manual mapping for special cases
-  const manualMap = {
-    "VLASOV Aleksandr": "aleksander-vlasov.webp",
-    "MORGADO António": "antonio-morgado.webp",
-    "TOMAS MORGADO António": "antonio-morgado.webp",
-    "COSNEFROY Benoit": "benoit-cosnefroy.webp",
-    "GIRMAY Biniam": "biniam-girmay-hailu.webp",
-    "HANSEN Peter": "peter-oxenberg-hansen.webp",
-    "Fernando Gaviria": "fernando-gaviria-rendon.webp",
-    "GAVIRIA RENDON Fernando": "fernando-gaviria-rendon.webp",
-    "PERICAS Adrià": "adria-pericas-capdevila.webp",
-    "PERICAS CAPDEVILA Adria": "adria-pericas-capdevila.webp",
-    "TORRES Pablo": "pablo-torres-arias.webp",
-    "TORRES ARIAS Pablo": "pablo-torres-arias.webp",
-    "DEL TORO Isaac": "isaac-del-toro-romero.webp",
-    "DEL TORO ROMERO Isaac": "isaac-del-toro-romero.webp",
-    "GROSSO Tibor": "tibor-del-grosso.webp",
-    "DEL GROSSO Tibor": "tibor-del-grosso.webp",
-    "VALGREN Michael": "michael-valgren-andersen.webp",
-    "FISHER-BLACK Finn": "finn-fisher-black.webp",
-    "FISHER-BLACK Finn Lachlan Fox": "finn-fisher-black.webp",
-    "POOLE Max David": "max-poole.webp",
-    "BJERG Mikkel": "mikkel-bjerg.webp",
-    "BJERG Mikkel Norsgaard": "mikkel-bjerg.webp",
-    "SÖDERQVIST Jakob": "jakob-soderqvist.webp",
-    "NIELSEN Magnus Cort": "magnus-cort-nielsen.webp",
-    "CORT Magnus": "magnus-cort-nielsen.webp",
-    "PLAPP Luke": "luke-plapp.webp",
-    "RICCITELLO Matthew": "matthew-riccitello.webp"
-  };
-  
-  // Check manual mapping first
-  if (manualMap[riderName]) {
-    return `/images/riders/${manualMap[riderName]}`;
-  }
-  
-  // Standard conversion
-  const normalized = normalizeRiderName(riderName);
-  const parts = normalized.split(' ').filter(p => p);
-  const lastname = parts[0];
-  const firstname = parts.slice(1).join('-');
-  const filename = `${firstname}-${lastname}.webp`;
-  return `/images/riders/${filename}`;
+  // Nu matcher filnavnene direkte med Google Sheets navnene!
+  // "EVENEPOEL Remco" -> "EVENEPOEL Remco.webp"
+  return `/images/riders/${riderName}.webp`;
 };
 
 function CyclingFantasyManager() {

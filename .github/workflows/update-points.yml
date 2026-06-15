@@ -21,7 +21,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install cloudscraper beautifulsoup4 pandas gspread oauth2client openpyxl
+        pip install -r requirements.txt
     
     - name: Create credentials file
       run: |

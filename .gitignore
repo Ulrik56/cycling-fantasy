@@ -8,4 +8,5 @@ node_modules/
 build/
 *.log
 *.txt
+!requirements.txt
 *.xlsx

@@ -47,8 +47,11 @@ const TEAMS = {
 const normalizeForFile = (name) => {
   return name
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Fjern accenter
-    .replace(/['']/g, ''); // Fjern apostroffer
+    .replace(/[\u0300-\u036f]/g, '') // Fjern accenter (\u00e9, \u00fc, \u010d osv.)
+    .replace(/\u00f8/g, 'o').replace(/\u00d8/g, 'O') // Nordiske bogstaver som NFD ikke r\u00f8rer
+    .replace(/\u00e5/g, 'a').replace(/\u00c5/g, 'A')
+    .replace(/\u00e6/g, 'ae').replace(/\u00c6/g, 'AE')
+    .replace(/['\u2018\u2019]/g, ''); // Fjern apostroffer (lige og kr\u00f8llede)
 };
 
 // Funktion til at konvertere rytter navn til foto URL
@@ -57,8 +60,9 @@ const getRiderPhotoUrl = (riderName) => {
   // "VAUQUELIN Kévin" -> "VAUQUELIN Kevin.webp"
   // "KÜNG Stefan" -> "KUNG Stefan.webp"
   const normalized = normalizeForFile(riderName);
+  // encodeURI sikrer at mellemrum/specialtegn altid kodes ens i URL'en
   // Add version to bust cache
-  return `/images/riders/${normalized}.webp?v=2`;
+  return encodeURI(`/images/riders/${normalized}.webp`) + '?v=3';
 };
 
 function CyclingFantasyManager() {
@@ -613,9 +617,11 @@ function CyclingFantasyManager() {
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}>
-                        <img 
+                        <img
                           src={getRiderPhotoUrl(rider)}
                           alt={rider}
+                          loading="lazy"
+                          decoding="async"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -623,9 +629,16 @@ function CyclingFantasyManager() {
                             position: 'absolute'
                           }}
                           onError={(e) => {
-                            // Hvis billede ikke findes, vis initialer i stedet
-                            e.target.style.display = 'none';
-                            e.target.nextElementSibling.style.display = 'flex';
+                            // Prøv igen et par gange ved midlertidig load-fejl, før vi viser initialer
+                            const img = e.target;
+                            const tries = Number(img.dataset.retry || 0);
+                            if (tries < 2) {
+                              img.dataset.retry = tries + 1;
+                              setTimeout(() => { img.src = getRiderPhotoUrl(rider) + '&r=' + Date.now(); }, 700);
+                              return;
+                            }
+                            img.style.display = 'none';
+                            if (img.nextElementSibling) img.nextElementSibling.style.display = 'flex';
                           }}
                         />
                         <div style={{
@@ -718,9 +731,11 @@ function CyclingFantasyManager() {
                                 justifyContent: 'center',
                                 position: 'relative'
                               }}>
-                                <img 
+                                <img
                                   src={getRiderPhotoUrl(rider)}
                                   alt={rider}
+                                  loading="lazy"
+                                  decoding="async"
                                   style={{
                                     width: '100%',
                                     height: '100%',
@@ -728,7 +743,14 @@ function CyclingFantasyManager() {
                                     position: 'absolute'
                                   }}
                                   onError={(e) => {
-                                    e.target.style.display = 'none';
+                                    const img = e.target;
+                                    const tries = Number(img.dataset.retry || 0);
+                                    if (tries < 2) {
+                                      img.dataset.retry = tries + 1;
+                                      setTimeout(() => { img.src = getRiderPhotoUrl(rider) + '&r=' + Date.now(); }, 700);
+                                      return;
+                                    }
+                                    img.style.display = 'none';
                                   }}
                                 />
                                 <div style={{

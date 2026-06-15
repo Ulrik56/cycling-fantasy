@@ -64,11 +64,23 @@ def scrape_uci_ranking():
         print(f"📥 Side {page_num}: ", end="", flush=True)
         
         try:
-            time.sleep(random.uniform(1.5, 3))
-            response = scraper.get(url, timeout=30)
-            
+            response = None
+            for attempt in range(1, 4):  # op til 3 forsøg pr. side
+                time.sleep(random.uniform(1.5, 3))
+                response = scraper.get(url, timeout=30)
+                if response.status_code == 200:
+                    break
+                # Blokeret (fx 403 fra Cloudflare): vent og lav en frisk scraper-session
+                print(f"HTTP {response.status_code} (forsøg {attempt}/3) ", end="", flush=True)
+                if attempt < 3:
+                    time.sleep(random.uniform(20, 40))
+                    scraper = cloudscraper.create_scraper(
+                        browser={'browser': 'chrome', 'platform': 'darwin', 'mobile': False}
+                    )
+                    scraper.headers.update(headers)
+
             if response.status_code != 200:
-                print(f"HTTP {response.status_code} - stopper")
+                print("- stopper efter gentagne forsøg")
                 break
             
             soup = BeautifulSoup(response.text, 'html.parser')

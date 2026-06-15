@@ -9,6 +9,35 @@ const getRiderPoints = (riderName, pointsData) => {
   return pointsData[riderName] || 0;
 };
 
+// TDF-badge må kun vises i juni og juli
+const isTdfPeriod = () => {
+  const m = new Date().getMonth(); // 0=januar ... 5=juni, 6=juli
+  return m === 5 || m === 6;
+};
+
+// Lille 🇫🇷 + TDF-mærke til ryttere der er udtaget til Tour de France
+const TdfBadge = () => (
+  <span
+    title="Udtaget til Tour de France"
+    style={{
+      background: 'rgba(255, 255, 255, 0.12)',
+      border: '1px solid rgba(255, 255, 255, 0.25)',
+      borderRadius: '0.25rem',
+      padding: '0.05rem 0.35rem',
+      fontSize: '0.6rem',
+      fontWeight: 'bold',
+      letterSpacing: '0.5px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.2rem',
+      whiteSpace: 'nowrap',
+      lineHeight: 1.6
+    }}
+  >
+    🇫🇷 TDF
+  </span>
+);
+
 // DANSKE CYKELCITATER - Legendariske kommentarer
 const DANISH_CYCLING_QUOTES = [
   { quote: "Virenque kører. Han står helt stille. Han står stille som et tysk træ i Harzen.", author: "Jørn Mader" },
@@ -69,6 +98,7 @@ function CyclingFantasyManager() {
   const [teams] = useState(TEAMS);
   const [selectedTeam, setSelectedTeam] = useState(Object.keys(TEAMS)[0]);
   const [riderPoints, setRiderPoints] = useState({});
+  const [tdfRiders, setTdfRiders] = useState({});
   const [lastUpdate, setLastUpdate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState({});
@@ -98,19 +128,27 @@ function CyclingFantasyManager() {
       const csvText = await response.text();
       const lines = csvText.split('\n');
       const points = {};
-      
+      const tdf = {};
+
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
-        
+
         const parts = line.split(',');
         if (parts.length >= 2) {
           const rider = parts[0].trim().replace(/"/g, '');
           const pts = parseInt(parts[1]) || 0;
-          if (rider) points[rider] = pts;
+          if (rider) {
+            points[rider] = pts;
+            // Kolonne D: "TDF" hvis rytteren er udtaget til Tour de France
+            const tdfFlag = (parts[3] || '').trim().replace(/"/g, '');
+            if (tdfFlag) tdf[rider] = true;
+          }
         }
       }
-      
+
+      setTdfRiders(tdf);
+
       if (Object.keys(points).length === 0) {
         throw new Error('Ingen data fundet i sheetet');
       }
@@ -655,6 +693,7 @@ function CyclingFantasyManager() {
                         </div>
                       </div>
                       <p style={{ fontWeight: '600', fontSize: '1.125rem', margin: 0 }}>{rider}</p>
+                      {isTdfPeriod() && tdfRiders[rider] && <TdfBadge />}
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -763,6 +802,7 @@ function CyclingFantasyManager() {
                                 </div>
                               </div>
                               <span>{rider}</span>
+                              {isTdfPeriod() && tdfRiders[rider] && <TdfBadge />}
                             </div>
                             <span style={{ color: '#facc15', fontWeight: '600' }}>
                               {getRiderPoints(rider, riderPoints)} point

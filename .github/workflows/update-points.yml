@@ -31,6 +31,7 @@ jobs:
       run: |
         python update_automatic_cloudscraper.py
         python scrape_upcoming_races.py
+        python scrape_tdf_startlist.py
       
     - name: Show results
       if: always()

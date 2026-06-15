@@ -140,9 +140,9 @@ function CyclingFantasyManager() {
           const pts = parseInt(parts[1]) || 0;
           if (rider) {
             points[rider] = pts;
-            // Kolonne D: "TDF" hvis rytteren er udtaget til Tour de France
-            const tdfFlag = (parts[3] || '').trim().replace(/"/g, '');
-            if (tdfFlag) tdf[rider] = true;
+            // Kolonne D: præcis "TDF" hvis rytteren er udtaget til Tour de France
+            const tdfFlag = (parts[3] || '').trim().replace(/"/g, '').toUpperCase();
+            if (tdfFlag === 'TDF') tdf[rider] = true;
           }
         }
       }

@@ -2,11 +2,13 @@
 Fælles hent-funktion til scraperne.
 
 Strategi (gratis):
-  1. Prøv cloudscraper først - virker når Cloudflare ikke blokerer. Gratis og hurtigt.
-  2. Hvis cloudscraper bliver blokeret (fx 403), falder vi tilbage til FlareSolverr:
+  1. Hvis FlareSolverr er konfigureret (FLARESOLVERR_URL), bruges den PRIMÆRT:
      et open source-værktøj der starter en RIGTIG Chrome-browser og løser Cloudflares
      udfordring. Det kører som en container inde i GitHub Actions - ingen konto, ingen
-     nøgle, ingen betaling.
+     nøgle, ingen betaling. (Da PCS' Cloudflare blokerer cloudscraper, sparer det tid
+     at gå direkte til FlareSolverr i stedet for først at fejle 20 gange.)
+  2. cloudscraper bruges som backup (eller primært, hvis FlareSolverr ikke er sat -
+     fx ved lokal kørsel uden containeren).
 
 Opsætning:
   - FLARESOLVERR_URL sættes i workflowet til http://localhost:8191/v1 (containeren).
@@ -69,13 +71,34 @@ def _via_api(url, timeout):
     return None, r.status_code
 
 
-def fetch(url, max_retries=3, timeout=30):
+def fetch(url, max_retries=2, timeout=30):
     """Hent en URL robust. Returnerer (html_text, status_code).
-    html_text er None hvis alt fejlede."""
-    scraper = _new_scraper()
+    html_text er None hvis alt fejlede.
+
+    Rækkefølge:
+      - Hvis FlareSolverr er konfigureret: brug den PRIMÆRT (cloudscraper er
+        alligevel blokeret af Cloudflare, så det sparer tid at gå direkte hertil).
+      - Ellers / hvis FlareSolverr fejler: cloudscraper.
+      - Til sidst: valgfri betalt API (kun hvis nøgle er sat).
+    """
     last_status = None
 
-    # 1) cloudscraper med genforsøg + frisk session imellem
+    # 1) FlareSolverr som primær (rigtig browser der omgår Cloudflare)
+    if FLARESOLVERR_URL:
+        for attempt in range(1, 3):
+            try:
+                html, status = _via_flaresolverr(url)
+                if html is not None:
+                    print("   ✅ hentet via FlareSolverr")
+                    return html, status or 200
+                print(f"   FlareSolverr gav intet (forsøg {attempt}/2)")
+            except Exception as e:
+                print(f"   FlareSolverr fejl (forsøg {attempt}/2): {e}")
+            time.sleep(random.uniform(2, 5))
+        print("   → FlareSolverr fejlede, prøver cloudscraper...")
+
+    # 2) cloudscraper (primær hvis ingen FlareSolverr, ellers backup)
+    scraper = _new_scraper()
     for attempt in range(1, max_retries + 1):
         try:
             time.sleep(random.uniform(1.5, 3))
@@ -87,19 +110,8 @@ def fetch(url, max_retries=3, timeout=30):
         except Exception as e:
             print(f"   cloudscraper fejl (forsøg {attempt}/{max_retries}): {e}")
         if attempt < max_retries:
-            time.sleep(random.uniform(10, 25))
+            time.sleep(random.uniform(8, 15))
             scraper = _new_scraper()
-
-    # 2) FlareSolverr (gratis, rigtig browser der omgår Cloudflare)
-    if FLARESOLVERR_URL:
-        try:
-            print("   → cloudscraper blokeret, prøver via FlareSolverr...")
-            html, status = _via_flaresolverr(url)
-            if html is not None:
-                print("   ✅ hentet via FlareSolverr")
-                return html, status or 200
-        except Exception as e:
-            print(f"   FlareSolverr fejl: {e}")
 
     # 3) Valgfri betalt API (kun hvis nøgle er sat)
     if SCRAPER_API_KEY:
@@ -112,8 +124,5 @@ def fetch(url, max_retries=3, timeout=30):
             last_status = status
         except Exception as e:
             print(f"   scraping-API fejl: {e}")
-
-    if not FLARESOLVERR_URL and not SCRAPER_API_KEY:
-        print("   (ingen fallback konfigureret - kun cloudscraper)")
 
     return None, last_status

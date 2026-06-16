@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-from scraper_utils import fetch  # cloudscraper + scraping-API fallback
+from scraper_utils import fetch  # FlareSolverr (primær) + cloudscraper (backup)
 
 # Samme opsætning som point-scriptet
 CREDENTIALS_FILE = 'cycling-fantasy-485220-faab21c57cd1.json'

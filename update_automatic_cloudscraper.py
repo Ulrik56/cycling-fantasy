@@ -14,7 +14,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
-from scraper_utils import fetch  # cloudscraper + scraping-API fallback
+from scraper_utils import fetch  # FlareSolverr (primær) + cloudscraper (backup)
 
 # =============================================================================
 # KONFIGURATION

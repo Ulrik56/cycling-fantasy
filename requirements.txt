@@ -6,6 +6,7 @@
 # oauth2client, som update_automatic_cloudscraper.py bruger til at logge ind.
 
 cloudscraper==1.2.71
+requests==2.32.3
 beautifulsoup4==4.12.3
 pandas==2.2.3
 gspread==5.12.4

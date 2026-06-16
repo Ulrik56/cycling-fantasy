@@ -9,7 +9,15 @@ on:
 jobs:
   update-points:
     runs-on: ubuntu-latest
-    
+
+    # Gratis Cloudflare-bypass: FlareSolverr kører som container ved siden af jobbet.
+    # Scraperne falder tilbage til den (http://localhost:8191) hvis cloudscraper blokeres.
+    services:
+      flaresolverr:
+        image: ghcr.io/flaresolverr/flaresolverr:latest
+        ports:
+          - 8191:8191
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -26,8 +34,23 @@ jobs:
     - name: Create credentials file
       run: |
         echo '${{ secrets.GOOGLE_CREDENTIALS }}' > cycling-fantasy-485220-faab21c57cd1.json
-    
+
+    - name: Wait for FlareSolverr
+      run: |
+        echo "Venter på at FlareSolverr bliver klar..."
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8191/ >/dev/null; then
+            echo "✅ FlareSolverr er klar"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "⚠️ FlareSolverr svarede ikke i tide - fortsætter alligevel (cloudscraper prøves stadig)"
+
     - name: Run update script
+      env:
+        FLARESOLVERR_URL: http://localhost:8191/v1
+        SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
       run: |
         python update_automatic_cloudscraper.py
         python scrape_upcoming_races.py

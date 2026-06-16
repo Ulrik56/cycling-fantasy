@@ -14,6 +14,8 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
+from scraper_utils import fetch  # cloudscraper + scraping-API fallback
+
 # =============================================================================
 # KONFIGURATION
 # =============================================================================
@@ -32,19 +34,7 @@ def scrape_uci_ranking():
     print("🚴 Henter UCI Season Ranking med CloudScraper")
     print("=" * 70)
     
-    scraper = cloudscraper.create_scraper(
-        browser={
-            'browser': 'chrome',
-            'platform': 'darwin',
-            'mobile': False
-        }
-    )
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15'
-    }
-    scraper.headers.update(headers)
-    
+    # Hentning sker via scraper_utils.fetch (cloudscraper + scraping-API fallback)
     all_data = []
     offset = 0
     page_num = 1
@@ -64,14 +54,13 @@ def scrape_uci_ranking():
         print(f"📥 Side {page_num}: ", end="", flush=True)
         
         try:
-            time.sleep(random.uniform(1.5, 3))
-            response = scraper.get(url, timeout=30)
-            
-            if response.status_code != 200:
-                print(f"HTTP {response.status_code} - stopper")
+            html, status = fetch(url)
+
+            if html is None:
+                print(f"HTTP {status} - stopper (cloudscraper + fallback fejlede)")
                 break
-            
-            soup = BeautifulSoup(response.text, 'html.parser')
+
+            soup = BeautifulSoup(html, 'html.parser')
             table = soup.find('table')
             
             if not table:

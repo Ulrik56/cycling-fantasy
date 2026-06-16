@@ -22,6 +22,8 @@ from bs4 import BeautifulSoup
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+from scraper_utils import fetch  # cloudscraper + scraping-API fallback
+
 # Samme opsætning som point-scriptet
 CREDENTIALS_FILE = 'cycling-fantasy-485220-faab21c57cd1.json'
 SHEET_NAME = 'Cycling Fantasy 2026'
@@ -37,20 +39,12 @@ def scrape_startlist(year):
     url = f"https://www.procyclingstats.com/race/tour-de-france/{year}/startlist/startlist"
     print(f"📥 Henter startliste: {url}")
 
-    scraper = cloudscraper.create_scraper(
-        browser={'browser': 'chrome', 'platform': 'darwin', 'mobile': False}
-    )
-    scraper.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15'
-    })
-
-    time.sleep(random.uniform(1.5, 3))
-    resp = scraper.get(url, timeout=30)
-    if resp.status_code != 200:
-        print(f"❌ HTTP {resp.status_code}")
+    html, status = fetch(url)
+    if html is None:
+        print(f"❌ HTTP {status} - kunne ikke hente startliste")
         return []
 
-    soup = BeautifulSoup(resp.text, 'html.parser')
+    soup = BeautifulSoup(html, 'html.parser')
 
     names = []
     seen = set()

@@ -37,31 +37,17 @@ def scrape_startlist(year):
     url = f"https://www.procyclingstats.com/race/tour-de-france/{year}/startlist/startlist"
     print(f"📥 Henter startliste: {url}")
 
-    headers = {
+    scraper = cloudscraper.create_scraper(
+        browser={'browser': 'chrome', 'platform': 'darwin', 'mobile': False}
+    )
+    scraper.headers.update({
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15'
-    }
+    })
 
-    def new_scraper():
-        s = cloudscraper.create_scraper(
-            browser={'browser': 'chrome', 'platform': 'darwin', 'mobile': False}
-        )
-        s.headers.update(headers)
-        return s
-
-    scraper = new_scraper()
-    resp = None
-    for attempt in range(1, 4):  # op til 3 forsøg
-        time.sleep(random.uniform(1.5, 3))
-        resp = scraper.get(url, timeout=30)
-        if resp.status_code == 200:
-            break
-        print(f"HTTP {resp.status_code} (forsøg {attempt}/3)")
-        if attempt < 3:
-            time.sleep(random.uniform(20, 40))
-            scraper = new_scraper()  # frisk session hjælper mod Cloudflare
-
+    time.sleep(random.uniform(1.5, 3))
+    resp = scraper.get(url, timeout=30)
     if resp.status_code != 200:
-        print(f"❌ HTTP {resp.status_code} - opgiver efter gentagne forsøg")
+        print(f"❌ HTTP {resp.status_code}")
         return []
 
     soup = BeautifulSoup(resp.text, 'html.parser')

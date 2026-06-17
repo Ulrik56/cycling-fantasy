@@ -9,6 +9,129 @@ const getRiderPoints = (riderName, pointsData) => {
   return pointsData[riderName] || 0;
 };
 
+// KOSTPRIS pr. rytter = hvad rytteren blev købt for (2025-point).
+// Bruges til investerings-trackeren: hvor god en investering har rytteren været i 2026?
+const RIDER_COSTS = {
+  "ABRAHAMSEN Jonas": 989,
+  "AGOSTINACCHIO Mattia": 100,
+  "ANDRESEN Tobias Lund": 1252,
+  "ARENSMAN Thymen": 1543,
+  "ASGREEN Kasper": 230,
+  "BISIAUX Léo": 311,
+  "BITTNER Pavel": 1126,
+  "BJERG Mikkel": 114,
+  "BLACKMORE Joseph": 379,
+  "BRENNAN Matthew": 1507,
+  "Benoît Cosnefroy": 385,
+  "CHRISTEN Jan": 1347,
+  "CORT Magnus": 808,
+  "DAINESE Alberto": 569,
+  "DE BONDT Dries": 487,
+  "DE LIE Arnaud": 2781,
+  "DEL GROSSO Tibor": 760,
+  "DEL TORO Isaac": 5664,
+  "EVENEPOEL Remco": 4118,
+  "FISHER-BLACK Finn": 705,
+  "FOLDAGER Anders": 241,
+  "Fernando Gaviria": 125,
+  "GALL Felix": 2216,
+  "GANNA Filippo": 2153,
+  "GAUDU David": 494,
+  "GEOGHEGAN HART Tao": 256,
+  "GIRMAY Biniam": 1646,
+  "GROENEWEGEN Dylan": 698,
+  "HELLEMOSE Asbjørn": 92,
+  "HIRSCHI Marc": 1262,
+  "KOOIJ Olav": 2123,
+  "KRAGH ANDERSEN Søren": 216,
+  "KRON Andreas": 57,
+  "KUBIŠ Lukáš": 1194,
+  "KÜNG Stefan": 757,
+  "LAMPERTI Luke": 385,
+  "LANDA Mikel": 740,
+  "LAPEIRA Paul": 778,
+  "LAPORTE Christophe": 369,
+  "LECERF Junior": 680,
+  "LEKNESSUND Andreas": 593,
+  "LEMMEN Bart": 193,
+  "MAGNIER Paul": 2327,
+  "MARTÍNEZ Daniel Felipe": 276,
+  "MAS Enric": 1021,
+  "MERLIER Tim": 1951,
+  "MOHORIČ Matej": 484,
+  "MOLARD Rudy": 195,
+  "MORGADO António": 985,
+  "NORDHAGEN Jørgen": 402,
+  "NYS Thibau": 846,
+  "O'CONNOR Ben": 945,
+  "OMRZEL Jakob": 365,
+  "ONLEY Oscar": 2910,
+  "PELLIZZARI Giulio": 1473,
+  "PERICAS Adrià": 195,
+  "PHILIPSEN Jasper": 2438,
+  "PLAPP Luke": 997,
+  "POOLE Max David": 425,
+  "RICCITELLO Matthew": 1020,
+  "RODRÍGUEZ Carlos": 435,
+  "ROGLIČ Primož": 1856,
+  "RONDEL Mathys": 552,
+  "SEGAERT Alec": 398,
+  "SEIXAS Paul": 1128,
+  "SIMMONS Quinn": 1280,
+  "SÖDERQVIST Jakob": 489,
+  "TEUTENBERG Tim Torn": 379,
+  "TIBERI Antonio": 1110,
+  "TORRES Pablo": 164,
+  "UIJTDEBROEKS Cian": 809,
+  "VACEK Mathias": 711,
+  "VALGREN Michael": 153,
+  "VALTER Attila": 175,
+  "VAN AERT Wout": 2908,
+  "VAN BAARLE Dylan": 140,
+  "VAN EETVELT Lennert": 439,
+  "VAN GILS Maxim": 538,
+  "VAN WILDER Ilan": 947,
+  "VAUQUELIN Kévin": 2459,
+  "VINGEGAARD Jonas": 5944,
+  "VLASOV Aleksandr": 260,
+  "WIDAR Jarno": 515,
+  "WITHEN PHILIPSEN Albert": 726,
+  "ZINGLE Axel": 131,
+  "ØXENBERG Peter": 60,
+};
+
+// Hent kostpris for en rytter (null hvis ukendt)
+const getRiderCost = (riderName) => {
+  const c = RIDER_COSTS[riderName];
+  return (c === undefined || c === null) ? null : c;
+};
+
+// Beregn investerings-status: hvor meget af kostprisen har rytteren tjent ind i 2026?
+// Skala på baren: 0–100 % = andel af kostprisen tjent ind (>100 % = profit, baren bliver fuld og grøn).
+// Markøren "halvvejs-pace" sidder ved 50 %: en fair investering bør være cirka her midt på sæsonen.
+const getInvestment = (riderName, pointsData) => {
+  const cost = getRiderCost(riderName);
+  const earned = getRiderPoints(riderName, pointsData);
+  if (!cost || cost <= 0) {
+    return { cost: null, earned, ratio: null };
+  }
+  const ratio = earned / cost; // 1.0 = tjent kostprisen ind
+  let color, label, emoji;
+  // Italienske cykeltermer der eskalerer gennem hierarkiet:
+  // Pacco (fiasko-køb) → Brocco (krikke) → Gregario (hjælperytter) →
+  // Capitano (kaptajn) → Campionissimo (supermester) → Cannibale (Il Cannibale / Merckx)
+  if (ratio >= 2.5)       { color = '#22c55e'; label = 'Cannibale';     emoji = '🦈'; }
+  else if (ratio >= 1.5)  { color = '#4ade80'; label = 'Campionissimo'; emoji = '🤑'; }
+  else if (ratio >= 1)    { color = '#a3e635'; label = 'Capitano';      emoji = '💰'; }
+  else if (ratio >= 0.66) { color = '#facc15'; label = 'Gregario';      emoji = '⏳'; }
+  else if (ratio >= 0.33) { color = '#f97316'; label = 'Brocco';        emoji = '😬'; }
+  else                    { color = '#ef4444'; label = 'Pacco';         emoji = '🥶'; }
+  const fill = Math.min(ratio, 1) * 100; // bar-bredde i %
+  // Pænt multiplikator-tal: "1,4×" (komma), heltal når ≥ 10
+  const mult = ratio >= 10 ? Math.round(ratio).toString() : ratio.toFixed(1).replace('.', ',');
+  return { cost, earned, ratio, color, label, emoji, fill, mult };
+};
+
 // TDF-badge må kun vises i juni og juli
 const isTdfPeriod = () => {
   const m = new Date().getMonth(); // 0=januar ... 5=juni, 6=juli
@@ -37,6 +160,111 @@ const TdfBadge = () => (
     🇫🇷 TDF
   </span>
 );
+
+// INVESTERINGS-MÅLER: viser hvor god en investering en rytter har været i 2026
+// i forhold til kostprisen (2025-point). Farvet bar + multiplikator-badge.
+const InvestmentMeter = ({ riderName, pointsData, compact = false }) => {
+  const inv = getInvestment(riderName, pointsData);
+
+  // Ingen kostpris kendt → diskret note i stedet for måler
+  if (inv.ratio === null) {
+    return (
+      <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontStyle: 'italic' }}>
+        ingen kostpris
+      </span>
+    );
+  }
+
+  // Kompakt udgave: kun badge (bruges i "Alle hold")
+  if (compact) {
+    return (
+      <span
+        title={`Tjent ${inv.earned.toLocaleString('da-DK')} af ${inv.cost.toLocaleString('da-DK')} kostpoint`}
+        style={{
+          background: inv.color,
+          color: '#0f172a',
+          fontSize: '0.65rem',
+          fontWeight: 'bold',
+          padding: '0.1rem 0.4rem',
+          borderRadius: '0.25rem',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {inv.mult}× {inv.emoji}
+      </span>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: '0.6rem' }}>
+      {/* Toplinje: kostpris + status-badge */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+        <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>
+          Kostpris: <span style={{ color: '#e5e7eb', fontWeight: 600 }}>{inv.cost.toLocaleString('da-DK')}</span> pt
+        </span>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            background: inv.color,
+            color: '#0f172a',
+            fontSize: '0.72rem',
+            fontWeight: 'bold',
+            padding: '0.12rem 0.45rem',
+            borderRadius: '0.35rem',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {inv.emoji} {inv.mult}× tjent ind · {inv.label}
+        </span>
+      </div>
+
+      {/* Selve måleren */}
+      <div style={{ position: 'relative', height: '0.75rem' }}>
+        {/* Spor */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(255, 255, 255, 0.08)',
+          borderRadius: '999px',
+          overflow: 'hidden'
+        }}>
+          {/* Fyld */}
+          <div style={{
+            width: `${inv.fill}%`,
+            height: '100%',
+            background: `linear-gradient(90deg, ${inv.color}99, ${inv.color})`,
+            borderRadius: '999px',
+            transition: 'width 0.6s ease'
+          }} />
+        </div>
+        {/* Halvvejs-pace markør (50 %) */}
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '-2px',
+          bottom: '-2px',
+          width: '2px',
+          background: 'rgba(255, 255, 255, 0.85)',
+          transform: 'translateX(-1px)'
+        }} />
+      </div>
+      <div style={{ position: 'relative', height: '0.9rem', marginTop: '0.1rem' }}>
+        <span style={{
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '0.6rem',
+          color: '#9ca3af',
+          whiteSpace: 'nowrap'
+        }}>
+          ▲ halvvejs-pace
+        </span>
+      </div>
+    </div>
+  );
+};
 
 // DANSKE CYKELCITATER - Legendariske kommentarer
 const DANISH_CYCLING_QUOTES = [
@@ -625,6 +853,30 @@ function CyclingFantasyManager() {
                 <h2 className="title-font" style={{ fontSize: '1.875rem', margin: 0 }}>{selectedTeam}</h2>
               </div>
 
+              {/* Forklaring til investerings-måleren */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.4rem 0.9rem',
+                fontSize: '0.7rem',
+                color: '#9ca3af',
+                marginBottom: '1rem',
+                padding: '0.5rem 0.75rem',
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: '0.5rem'
+              }}>
+                <span style={{ color: '#e5e7eb', fontWeight: 600 }}>💰 Investering 2026:</span>
+                <span>hvor stor del af kostprisen rytteren har tjent ind</span>
+                <span><span style={{ color: '#ef4444', fontWeight: 700 }}>●</span> Pacco</span>
+                <span><span style={{ color: '#f97316', fontWeight: 700 }}>●</span> Brocco</span>
+                <span><span style={{ color: '#facc15', fontWeight: 700 }}>●</span> Gregario</span>
+                <span><span style={{ color: '#a3e635', fontWeight: 700 }}>●</span> Capitano</span>
+                <span><span style={{ color: '#4ade80', fontWeight: 700 }}>●</span> Campionissimo</span>
+                <span><span style={{ color: '#22c55e', fontWeight: 700 }}>●</span> Cannibale</span>
+                <span style={{ fontStyle: 'italic' }}>▲ = halvvejs-pace (sæsonen er kun halvvejs)</span>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {selectedTeamData.map((rider, index) => (
                   <div
@@ -635,13 +887,14 @@ function CyclingFantasyManager() {
                       padding: '1rem',
                       borderRadius: '0.5rem',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      flexDirection: 'column',
+                      alignItems: 'stretch',
                       transition: 'all 0.3s'
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                   >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div style={{
                         width: '2.5rem',
@@ -704,6 +957,8 @@ function CyclingFantasyManager() {
                       </div>
                       <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>UCI point</p>
                     </div>
+                    </div>
+                    <InvestmentMeter riderName={rider} pointsData={riderPoints} />
                   </div>
                 ))}
               </div>
@@ -804,9 +1059,12 @@ function CyclingFantasyManager() {
                               <span>{rider}</span>
                               {isTdfPeriod() && tdfRiders[rider] && <TdfBadge />}
                             </div>
-                            <span style={{ color: '#facc15', fontWeight: '600' }}>
-                              {getRiderPoints(rider, riderPoints)} point
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <InvestmentMeter riderName={rider} pointsData={riderPoints} compact />
+                              <span style={{ color: '#facc15', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                                {getRiderPoints(rider, riderPoints)} point
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -23,6 +23,7 @@ Opsætning:
 import os
 import time
 import random
+import atexit
 import urllib.parse
 
 import requests
@@ -48,10 +49,48 @@ def _new_scraper():
     return s
 
 
+# FlareSolverr-session: løs Cloudflare-udfordringen ÉN gang og genbrug cookien
+# til alle efterfølgende sider. Det gør de næste hentninger næsten øjeblikkelige.
+_FS_SESSION = None
+MAX_TIMEOUT_MS = 120000  # FlareSolverr får op til 120 sek. til at løse en udfordring
+
+
+def _ensure_session():
+    global _FS_SESSION
+    if _FS_SESSION is not None:
+        return _FS_SESSION
+    try:
+        r = requests.post(FLARESOLVERR_URL, json={"cmd": "sessions.create"}, timeout=MAX_TIMEOUT_MS / 1000 + 30)
+        data = r.json()
+        if data.get("status") == "ok" and data.get("session"):
+            _FS_SESSION = data["session"]
+            print(f"   FlareSolverr-session oprettet ({str(_FS_SESSION)[:8]}…)")
+    except Exception as e:
+        print(f"   Kunne ikke oprette FlareSolverr-session: {e}")
+    return _FS_SESSION
+
+
+def _destroy_session():
+    global _FS_SESSION
+    if _FS_SESSION:
+        try:
+            requests.post(FLARESOLVERR_URL, json={"cmd": "sessions.destroy", "session": _FS_SESSION}, timeout=30)
+        except Exception:
+            pass
+        _FS_SESSION = None
+
+
+atexit.register(_destroy_session)
+
+
 def _via_flaresolverr(url):
-    """Hent via FlareSolverr (rigtig browser der løser Cloudflare). (html, status)."""
-    payload = {"cmd": "request.get", "url": url, "maxTimeout": 60000}
-    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=120)
+    """Hent via FlareSolverr (rigtig browser der løser Cloudflare). (html, status).
+    Genbruger en session, så udfordringen kun løses én gang."""
+    payload = {"cmd": "request.get", "url": url, "maxTimeout": MAX_TIMEOUT_MS}
+    sess = _ensure_session()
+    if sess:
+        payload["session"] = sess
+    r = requests.post(FLARESOLVERR_URL, json=payload, timeout=MAX_TIMEOUT_MS / 1000 + 30)
     data = r.json()
     if data.get("status") == "ok":
         sol = data.get("solution", {})

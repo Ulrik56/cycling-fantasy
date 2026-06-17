@@ -49,7 +49,8 @@ def scrape_startlist(year):
     names = []
     seen = set()
     for a in soup.find_all('a', href=True):
-        if '/rider/' not in a['href']:
+        # PCS bruger relative links ("rider/...") såvel som absolutte ("/rider/...")
+        if 'rider/' not in a['href']:
             continue
         text = a.get_text(' ', strip=True)
         if not text:

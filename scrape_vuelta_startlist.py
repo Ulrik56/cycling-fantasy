@@ -1,8 +1,8 @@
 """
-TOUR DE FRANCE STARTLISTE -> Google Sheet
-- Henter den officielle TDF-startliste fra ProCyclingStats
-- Markerer udtagne ryttere med "TDF" i kolonne D i Points-arket
-- Frontenden viser så et 🇫🇷 + TDF-badge ud for dem (kun i juni/juli)
+VUELTA A ESPAÑA STARTLISTE -> Google Sheet
+- Henter den officielle Vuelta-startliste fra ProCyclingStats
+- Markerer udtagne ryttere med "VUELTA" i kolonne D i Points-arket
+- Frontenden viser så et 🇪🇸 + VUELTA-badge ud for dem (kun i august/september)
 
 Defensiv:
 - Hvis startlisten endnu ikke er offentliggjort (få/ingen ryttere),
@@ -29,14 +29,15 @@ CREDENTIALS_FILE = 'cycling-fantasy-485220-faab21c57cd1.json'
 SHEET_NAME = 'Cycling Fantasy 2026'
 WORKSHEET_NAME = 'Points'
 
-TDF_COLUMN = 'D'                 # kolonne hvor "TDF" skrives
+MARK_COLUMN = 'D'                # kolonne hvor markeringen skrives
+MARK_VALUE = 'VUELTA'            # værdien der skrives for udtagne ryttere
 MIN_RIDERS_TO_TRUST = 50         # under dette antal regnes startlisten som "ikke klar"
 
 
 def scrape_startlist(year):
-    """Hent rytternavne fra PCS' TDF-startliste. Returnerer en liste af navne
+    """Hent rytternavne fra PCS' Vuelta-startliste. Returnerer en liste af navne
     i 'EFTERNAVN Fornavn'-format (samme format som arket bruger)."""
-    url = f"https://www.procyclingstats.com/race/tour-de-france/{year}/startlist/startlist"
+    url = f"https://www.procyclingstats.com/race/vuelta-a-espana/{year}/startlist/startlist"
     print(f"📥 Henter startliste: {url}")
 
     html, status = fetch(url)
@@ -125,15 +126,15 @@ def main():
         if not row or not row[0].strip():
             continue
         rider = row[0].strip()
-        mark = 'TDF' if is_on_startlist(rider, startlist_norm) else ''
+        mark = MARK_VALUE if is_on_startlist(rider, startlist_norm) else ''
         if mark:
             selected += 1
-        updates.append({'range': f'{TDF_COLUMN}{i}', 'values': [[mark]]})
+        updates.append({'range': f'{MARK_COLUMN}{i}', 'values': [[mark]]})
 
     if updates:
         try:
             sheet.batch_update(updates)
-            print(f"✅ Opdateret kolonne {TDF_COLUMN}: {selected} ryttere markeret som TDF")
+            print(f"✅ Opdateret kolonne {MARK_COLUMN}: {selected} ryttere markeret som {MARK_VALUE}")
         except Exception as e:
             print(f"⚠️  Kunne ikke skrive til arket: {e}")
 

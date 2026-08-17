@@ -132,16 +132,16 @@ const getInvestment = (riderName, pointsData) => {
   return { cost, earned, ratio, color, label, emoji, fill, mult };
 };
 
-// TDF-badge må kun vises i juni og juli
-const isTdfPeriod = () => {
-  const m = new Date().getMonth(); // 0=januar ... 5=juni, 6=juli
-  return m === 5 || m === 6;
+// Vuelta-badge må kun vises i august og september
+const isVueltaPeriod = () => {
+  const m = new Date().getMonth(); // 0=januar ... 7=august, 8=september
+  return m === 7 || m === 8;
 };
 
-// Lille 🇫🇷 + TDF-mærke til ryttere der er udtaget til Tour de France
-const TdfBadge = () => (
+// Lille 🇪🇸 + VUELTA-mærke til ryttere der er udtaget til Vuelta a España
+const VueltaBadge = () => (
   <span
-    title="Udtaget til Tour de France"
+    title="Udtaget til Vuelta a España"
     style={{
       background: 'rgba(255, 255, 255, 0.12)',
       border: '1px solid rgba(255, 255, 255, 0.25)',
@@ -157,7 +157,7 @@ const TdfBadge = () => (
       lineHeight: 1.6
     }}
   >
-    🇫🇷 TDF
+    🇪🇸 VUELTA
   </span>
 );
 
@@ -326,7 +326,7 @@ function CyclingFantasyManager() {
   const [teams] = useState(TEAMS);
   const [selectedTeam, setSelectedTeam] = useState(Object.keys(TEAMS)[0]);
   const [riderPoints, setRiderPoints] = useState({});
-  const [tdfRiders, setTdfRiders] = useState({});
+  const [vueltaRiders, setVueltaRiders] = useState({});
   const [lastUpdate, setLastUpdate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState({});
@@ -356,7 +356,7 @@ function CyclingFantasyManager() {
       const csvText = await response.text();
       const lines = csvText.split('\n');
       const points = {};
-      const tdf = {};
+      const vuelta = {};
 
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -368,14 +368,14 @@ function CyclingFantasyManager() {
           const pts = parseInt(parts[1]) || 0;
           if (rider) {
             points[rider] = pts;
-            // Kolonne D: "TDF" hvis rytteren er udtaget til Tour de France
-            const tdfFlag = (parts[3] || '').trim().replace(/"/g, '');
-            if (tdfFlag) tdf[rider] = true;
+            // Kolonne D: "VUELTA" hvis rytteren er udtaget til Vuelta a España
+            const vueltaFlag = (parts[3] || '').trim().replace(/"/g, '').toUpperCase();
+            if (vueltaFlag === 'VUELTA') vuelta[rider] = true;
           }
         }
       }
 
-      setTdfRiders(tdf);
+      setVueltaRiders(vuelta);
 
       if (Object.keys(points).length === 0) {
         throw new Error('Ingen data fundet i sheetet');
@@ -946,7 +946,7 @@ function CyclingFantasyManager() {
                         </div>
                       </div>
                       <p style={{ fontWeight: '600', fontSize: '1.125rem', margin: 0 }}>{rider}</p>
-                      {isTdfPeriod() && tdfRiders[rider] && <TdfBadge />}
+                      {isVueltaPeriod() && vueltaRiders[rider] && <VueltaBadge />}
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1057,7 +1057,7 @@ function CyclingFantasyManager() {
                                 </div>
                               </div>
                               <span>{rider}</span>
-                              {isTdfPeriod() && tdfRiders[rider] && <TdfBadge />}
+                              {isVueltaPeriod() && vueltaRiders[rider] && <VueltaBadge />}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <InvestmentMeter riderName={rider} pointsData={riderPoints} compact />

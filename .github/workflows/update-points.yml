@@ -2,16 +2,17 @@ name: Update UCI Points Daily
 
 on:
   schedule:
-    # Kører hver dag kl. 06:00 UTC (07:00 dansk tid)
+    # Kører hver dag kl. 06:00 UTC (08:00 dansk sommertid / 07:00 vintertid)
     - cron: '0 6 * * *'
   workflow_dispatch: # Tillader manuel kørsel
+
+permissions:
+  contents: write
 
 jobs:
   update-points:
     runs-on: ubuntu-latest
 
-    # Gratis Cloudflare-bypass: FlareSolverr kører som container ved siden af jobbet.
-    # Scraperne henter primært via den (http://localhost:8191); cloudscraper er kun backup.
     services:
       flaresolverr:
         image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -21,16 +22,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
-    
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
         python-version: '3.11'
-    
+
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-    
+
     - name: Create credentials file
       run: |
         echo '${{ secrets.GOOGLE_CREDENTIALS }}' > cycling-fantasy-485220-faab21c57cd1.json
@@ -54,8 +55,11 @@ jobs:
         python update_automatic_cloudscraper.py
         python scrape_upcoming_races.py
         python scrape_vuelta_startlist.py
-      
+
     - name: Show results
       if: always()
       run: |
         echo "Update completed!"
+
+    - name: Keepalive (hold planlagt workflow aktiv)
+      uses: gautamkrishnar/keepalive-workflow@v2

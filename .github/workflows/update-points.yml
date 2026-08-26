@@ -61,10 +61,9 @@ jobs:
       run: |
         echo "Update completed!"
 
-        - name: Keepalive (hold planlagt workflow aktiv)
+    - name: Keepalive (hold planlagt workflow aktiv)
       if: github.event_name == 'schedule'
       run: |
-        # Lav et tomt commit den 1. i hver måned, så repoet aldrig når 60 dages inaktivitet
         if [ "$(date -u +%d)" = "01" ]; then
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
